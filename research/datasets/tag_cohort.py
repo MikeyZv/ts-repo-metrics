@@ -14,7 +14,8 @@ def _validate_row(row: dict, required: list, cohort: str, row_num: int):
     for field in required:
         if field not in row:
             raise ValueError(f"{cohort} row {row_num}: missing column '{field}'")
-        if not row[field].strip():
+        value = row[field]
+        if value is None or not value.strip():
             raise ValueError(f"{cohort} row {row_num}: blank required field '{field}'")
 
 
