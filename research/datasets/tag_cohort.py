@@ -10,6 +10,14 @@ import csv
 from pathlib import Path
 
 
+def _validate_row(row: dict, required: list, cohort: str, row_num: int):
+    for field in required:
+        if field not in row:
+            raise ValueError(f"{cohort} row {row_num}: missing column '{field}'")
+        if not row[field].strip():
+            raise ValueError(f"{cohort} row {row_num}: blank required field '{field}'")
+
+
 def merge_cohorts():
     """Merge pre-AI and post-AI repos into manifest."""
     script_dir = Path(__file__).parent
@@ -21,27 +29,29 @@ def merge_cohorts():
 
     # Read pre-AI repos
     if pre_ai_path.exists():
-        with open(pre_ai_path, "r", encoding="utf-8") as f:
+        with open(pre_ai_path, "r", encoding="utf-8-sig") as f:
             reader = csv.DictReader(f)
-            for row in reader:
+            for row_num, row in enumerate(reader, start=2):
+                _validate_row(row, ["owner", "repo", "url"], "pre_ai", row_num)
                 rows.append({
                     "cohort": "pre_ai",
-                    "owner": row.get("owner", ""),
-                    "repo": row.get("repo", ""),
-                    "repo_url": row.get("url", ""),
+                    "owner": row["owner"].strip(),
+                    "repo": row["repo"].strip(),
+                    "repo_url": row["url"].strip(),
                     "analysis_source": "local_run",
                 })
 
     # Read post-AI repos
     if post_ai_path.exists():
-        with open(post_ai_path, "r", encoding="utf-8") as f:
+        with open(post_ai_path, "r", encoding="utf-8-sig") as f:
             reader = csv.DictReader(f)
-            for row in reader:
+            for row_num, row in enumerate(reader, start=2):
+                _validate_row(row, ["owner", "repo", "repo_url"], "post_ai", row_num)
                 rows.append({
                     "cohort": "post_ai",
-                    "owner": row.get("owner", ""),
-                    "repo": row.get("repo", ""),
-                    "repo_url": row.get("repo_url", ""),
+                    "owner": row["owner"].strip(),
+                    "repo": row["repo"].strip(),
+                    "repo_url": row["repo_url"].strip(),
                     "analysis_source": "supabase",
                 })
 
